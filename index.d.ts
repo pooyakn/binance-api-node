@@ -102,8 +102,6 @@ declare module 'binance-api-node' {
 
   export interface WithrawResponse {
     id: string
-    msg: string
-    success: boolean
   }
 
   export enum DepositStatus {
@@ -304,6 +302,8 @@ declare module 'binance-api-node' {
       address: string
       amount: number
       name?: string
+      addressTag?: string
+      network: string
     }): Promise<WithrawResponse>
     assetDetail(): Promise<AssetDetail>
     accountSnapshot(options: {
