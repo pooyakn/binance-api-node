@@ -295,6 +295,8 @@ export default opts => {
     getInfo: () => info,
     ping: () => pubCall('/api/v3/ping').then(() => true),
     time: () => pubCall('/api/v3/time').then(r => r.serverTime),
+    systemStatus: () => pubCall('/sapi/v1/system/status'),
+    accountStatus: () => pubCall('/sapi/v1/account/status'),
     exchangeInfo: () => pubCall('/api/v3/exchangeInfo'),
 
     book: payload => book(pubCall, payload),

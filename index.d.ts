@@ -131,31 +131,31 @@ declare module 'binance-api-node' {
     COMPLETED = 6,
   }
 
+  export enum WithdrawTransferType {
+    External = 0,
+    Internal = 1
+  }
   export interface WithdrawHistoryResponse {
-    withdrawList: {
-      id: string
-      amount: number
-      transactionFee: number
-      address: string
-      asset: string
-      txId: string
-      applyTime: number
-      status: WithdrawStatus
-    }[]
-    success: boolean
+    address: string
+    amount: string
+    applyTime: string
+    coin: string
+    id: string
+    withdrawOrderId?: string // will not be returned if there's no withdrawOrderId for this withdraw.
+    network?: string
+    transferType: WithdrawTransferType,   // 1 for internal transfer, 0 for external transfer   
+    status: WithdrawStatus,
+    txId: string
   }
 
   export interface AssetDetail {
-    success: boolean
-    assetDetail: {
       [asset: string]: {
-        minWithdrawAmount: number
+        minWithdrawAmount: string
         depositStatus: boolean
         withdrawFee: number
         withdrawStatus: boolean
         depositTip?: string
       }
-    }
   }
 
   export interface AccountSnapshot {
@@ -298,14 +298,16 @@ declare module 'binance-api-node' {
     }): Promise<TradeResult[]>
     depositAddress(options: { asset: string }): Promise<DepositAddress>
     withdraw(options: {
-      asset: string
+      coin: string
+      withdrawOrderId?: string
+      network?: string
       address: string
-      amount: number
-      name?: string
       addressTag?: string
-      network: string
+      amount: number
+      transactionFeeFlag?: boolean // When making internal transfer, true for returning the fee to the destination account; false for returning the fee back to the departure account. Default false.
+      name?: string // Description of the address. Space in name should be encoded into %20.
     }): Promise<WithrawResponse>
-    assetDetail(): Promise<AssetDetail>
+    assetDetail(asset?: string): Promise<AssetDetail>
     accountSnapshot(options: {
       type: string
       startTime?: number
@@ -313,11 +315,13 @@ declare module 'binance-api-node' {
       limit?: number
     }): Promise<AccountSnapshot>
     withdrawHistory(options: {
-      asset: string
-      status?: number
+      coin?: string
+      status?: WithdrawStatus
+      offset?: number
+      limit?: number
       startTime?: number
       endTime?: number
-    }): Promise<WithdrawHistoryResponse>
+    }): Promise<WithdrawHistoryResponse[]>
     depositHistory(options: {
       asset: string
       status?: number
@@ -443,6 +447,57 @@ declare module 'binance-api-node' {
       limit?: number
       fromId?: number
     }): Promise<MyTrade[]>
+    capitalConfigs(): Promise<CapitalConfigsResponse[]>,
+    systemStatus(): Promise<SystemStatusResponse>,
+    accountStatus: () => Promise<AccountStatusResponse>
+  }
+
+  export interface AccountStatusResponse {
+    data: "normal" | string
+  }
+  export enum SystemStatus {
+    Normal = 0,
+    Maintenance = 1
+  }
+  export interface SystemStatusResponse {
+    status: SystemStatus
+    msg: "normal" | "maintenance"
+  }
+
+  export interface CapitalConfigsResponse {
+      coin: string
+      depositAllEnable: boolean
+      free: number
+      freeze: number
+      ipoable: number
+      ipoing: number
+      isLegalMoney: boolean
+      locked: number
+      name: string
+      networkList: NetworkData[],
+      storage: number
+      trading: boolean
+      withdrawAllEnable: boolean
+      withdrawing: number
+  }
+
+  export interface NetworkData {
+      addressRegex: string
+      coin: string
+      depositDesc: string
+      depositEnable: boolean
+      isDefault: boolean // is default network for this asset
+      memoRegex: string
+      minConfirm: number,  // min number for balance confirmation
+      name: string
+      network: string
+      resetAddressStatus: boolean
+      specialTips: string
+      unLockConfirm: number  // confirmation number for balance unlock 
+      withdrawDesc: string // shown only when "withdrawEnable" is false.
+      withdrawEnable: boolean
+      withdrawFee: number
+      withdrawMin: number
   }
 
   export interface HttpError extends Error {
